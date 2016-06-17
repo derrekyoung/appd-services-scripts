@@ -1,0 +1,17 @@
+# Service Usage
+
+## Check service status
+`service appd-controller status`
+
+## Start service
+`service appd-controller start`
+
+## Stop service
+`service appd-controller stop`
+
+## Restart service
+`service appd-controller restart`
+
+## Check status for all services
+``./AppDyanamics/status.sh`
+You'll need to include the appropriate services
