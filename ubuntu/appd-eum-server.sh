@@ -1,56 +1,52 @@
-#!/bin/sh
-#--------------------------------------------------------------------------------------------------
-# Service script for starting or stopping the AppDynamics EUM Server
-#
-#	Notes:
-#		Edit all path names or agent options to suit your particular installation.
-#
-#		When installing this file in the /etc/init.d directory,
-#			remove the '.sh' extension
-#
-#		There may be differences in service scripts for CentOS/RedHat vs Ubuntu/Debian -
-#			adjust scripts accordingly
-#
-#--------------------------------------------------------------------------------------------------
+#!/bin/bash
 
-# Change this directory to the correct path on your server
-APPD_EUM_DIR="/opt/AppDynamics/EUEM/eum-processor"
+. /home/ubuntu/AppDynamics/appd-env.sh
 
+################################################
+# Do not edit below this line
 
+start() {
+	cd $APPD_EUM_HOME
+	exec bin/eum.sh start
+}
 
-validate() {
-	if [ ! -d "$APPD_EUM_DIR" ]; then
-		echo "ERROR: Unable to locate $APPD_EUM_DIR/. Correct the variable at the top of this script."
-		exit 1
+stop() {
+	cd $APPD_EUM_HOME
+	exec bin/eum.sh stop
+}
+
+restart() {
+	stop
+	start
+}
+
+status() {
+	STATUS=`ps -ef | grep -i "eum.sh" |grep -v grep`
+	if [ $? -eq 0 ];then
+		echo "AppDynamics EUM Server is running"
+	else
+		echo "AppDynamics EUM Server is STOPPED"
 	fi
 }
 
-main() {
-	case "$1" in
+case "$1" in
 	start)
-		cd $APPD_EUM_DIR
-		exec bin/eum.sh start
+		start
 	;;
 
 	stop)
-		cd $APPD_EUM_DIR
-		exec bin/eum.sh stop
+		stop
 	;;
 
 	restart)
-		$0 stop
-		$0 start
+		restart
 	;;
 
 	status)
-		exit 1
+		status
 	;;
 
 	*)
 		echo "Usage: $0 {start|stop|restart|status}"
 		exit 1
-	esac
-}
-
-validate
-main "$@"
+esac

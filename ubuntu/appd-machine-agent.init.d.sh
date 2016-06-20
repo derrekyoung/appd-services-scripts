@@ -5,12 +5,12 @@
 ################################################
 # Do not edit below this line
 
-MACHINE_AGENT_ANALYTICS_URL="http://localhost:9091/ping"
+APPD_MACHINE_AGENT_ANALYTICS_URL="http://localhost:9091/ping"
 
 start()
 {
 	removePID
-	nohup sudo -H -u $APPD_RUNTIME_USER $JAVA_BIN $AGENT_OPTIONS -Xmx32m -jar $MACHINE_AGENT_HOME/machineagent.jar > /dev/null 2>&1 &
+	nohup sudo -H -u $APPD_RUNTIME_USER $JAVA_BIN $APPD_AGENT_OPTIONS -Xmx32m -jar $APPD_MACHINE_AGENT_HOME/machineagent.jar > /dev/null 2>&1 &
 }
 
 stop()
@@ -29,11 +29,11 @@ status ()
    fi
 
    # Check for running Analytics agent embedded into Machine Agent at localhost:9091/ping --> pong
-   check_events_service
+   check_analytics_agent
 }
 
-check_events_service(){
-    local url=$MACHINE_AGENT_ANALYTICS_URL
+check_analytics_agent(){
+    local url=$APPD_MACHINE_AGENT_ANALYTICS_URL
     local expectedContent="HTTP/1.1 200 OK"
 
 	curl -s --head $url | head -n 1 | grep "$expectedContent" > /dev/null
@@ -46,7 +46,7 @@ check_events_service(){
 }
 
 removePID() {
-	nohup sudo -H -u $APPD_RUNTIME_USER rm -f $MACHINE_AGENT_HOME/monitors/analytics-agent/analytics-agent.id > /dev/null 2>&1 &
+	nohup sudo -H -u $APPD_RUNTIME_USER rm -f $APPD_MACHINE_AGENT_HOME/monitors/analytics-agent/analytics-agent.id > /dev/null 2>&1 &
 }
 
 case "$1" in

@@ -7,7 +7,7 @@
 
 start()
 {
-	nohup sudo -H -u $APPD_RUNTIME_USER $JAVA_BIN -Xmx1024m $AGENT_OPTIONS -jar $DB_AGENT_HOME/db-agent.jar  > /dev/null 2>&1 &
+	nohup sudo -H -u $APPD_RUNTIME_USER $JAVA_BIN -Xmx1024m $ $APP_AGENT_OPTIONS -jar $APPD_DB_AGENT_HOME/db-agent.jar  > /dev/null 2>&1 &
 }
 
 stop()

@@ -7,12 +7,12 @@
 
 start()
 {
-	nohup sudo -H -u $APPD_RUNTIME_USER $CONTROLLER_HOME/bin/controller.sh start > /dev/null 2>&1 &
+	nohup sudo -H -u $APPD_RUNTIME_USER $APPD_CONTROLLER_HOME/bin/controller.sh start > /dev/null 2>&1 &
 }
 
 stop()
 {
-	nohup sudo -H -u $APPD_RUNTIME_USER $CONTROLLER_HOME/bin/controller.sh start > /dev/null 2>&1 &
+	nohup sudo -H -u $APPD_RUNTIME_USER $APPD_CONTROLLER_HOME/bin/controller.sh start > /dev/null 2>&1 &
 }
 
 status ()
