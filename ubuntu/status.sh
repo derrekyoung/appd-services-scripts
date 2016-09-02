@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. /home/ubuntu/AppDynamics/appd-env.sh
+source ./appd-environment-variables.sh
 
 service appd-controller status
 #service appd-controller-events-service status

@@ -7,8 +7,11 @@ if [ -z "$1" ];then
     exit 1
 fi
 
-# Trim parameter file extensions
+# Copy over the AppD environment variables
+echo "Copying over the environment variables"
+sudo cp ./appd-environment-variables.sh /etc/init.d/
 
+# Trim parameter file extensions
 script=$1
 service=${script%.init.d.sh}
 

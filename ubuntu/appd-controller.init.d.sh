@@ -1,6 +1,10 @@
 #!/bin/bash
 
-. /home/ubuntu/AppDynamics/appd-env.sh
+source ./appd-environment-variables.sh
+if [ ! -f "./appd-environment-variables.sh" ]; then
+	echo "ERROR: File not found, appd-environment-variables.sh. This file must be in the same directory as this script."
+	exit 1
+fi
 
 ################################################
 # Do not edit below this line
@@ -18,14 +22,14 @@ stop()
 status ()
 {
 	STATUS=`ps -ef | grep -i glassfish |grep -v grep`
-	if [ $? -eq 0 ];then
+	if [ $? -eq 0 ]; then
 		echo "AppDynamics Controller app server is running"
 	else
 		echo "AppDynamics Controller app server is STOPPED"
 	fi
 
 	STATUS=`ps -ef|grep -i "db/bin/mysqld" |grep -v grep`
-	if [ $? -eq 0 ];then
+	if [ $? -eq 0 ]; then
 		echo "AppDynamics Controller database is running"
 	else
 		echo "AppDynamics Controller database is STOPPED"
