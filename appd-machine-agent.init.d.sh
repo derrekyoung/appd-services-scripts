@@ -81,20 +81,6 @@ status() {
    check-analytics-agent
 }
 
-get-java() {
-    local java=$(find "$AGENT_HOME/jre" -name java -type f 2> /dev/null | head -n 1 2>/dev/null)
-	if [[ ! -z "$java" ]]; then
-		# Use bundled JRE by default
-		:
-	elif [[ ! -z "$JAVA_HOME/bin/java" ]]; then
-		java="$JAVA_HOME/bin/java"
-	else
-		java=$(which java)
-	fi
-
-	echo "$java"
-}
-
 log-debug() {
     if [[ $DEBUG_LOGS = true ]]; then
         echo -e "DEBUG: $1"
