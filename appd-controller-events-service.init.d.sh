@@ -1,4 +1,6 @@
 #!/bin/bash
+#chkconfig: 2345 30 95
+#description: service script for AppDynamics Events Service
 
 APPD_RUNTIME_USER="ubuntu"
 APPD_CONTROLLER_HOME="/opt/AppDynamics/Controller"

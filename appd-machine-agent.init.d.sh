@@ -1,14 +1,16 @@
 #!/bin/bash
+#chkconfig: 2345 50 80
+#description: service script for AppDynamics Machine agent
 set -e
 
-APPD_RUNTIME_USER="ubuntu"
+APPD_RUNTIME_USER="appdynamics"
 AGENT_HOME="/opt/AppDynamics/agents/machineagent"
 JAVA="$AGENT_HOME/jre/bin/java"
 
 # Additional -D and JVM args here, heap size for example
 AGENT_OPTIONS=""
 AGENT_OPTIONS="$AGENT_OPTIONS -Xmx1024m"
-AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.maxMetrics=1000"
+AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.maxMetrics=500"
 # AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.hostName=FOOBAR"
 # AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.port=FOOBAR"
 # AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.ssl.enabled=FOOBAR"

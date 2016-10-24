@@ -1,4 +1,6 @@
 #!/bin/bash
+#chkconfig: 2345 60 90
+#description: service script for AppDynamics Database agent
 set -e
 
 APPD_RUNTIME_USER="ubuntu"

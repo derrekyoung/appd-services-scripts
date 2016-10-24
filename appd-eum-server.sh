@@ -1,4 +1,6 @@
 #!/bin/bash
+#chkconfig: 2345 40 90
+#description: service script for AppDynamics EUM Server
 
 APPD_RUNTIME_USER="ubuntu"
 APPD_EUM_HOME="/opt/AppDynamics/EUM"
