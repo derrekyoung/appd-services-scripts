@@ -9,17 +9,22 @@ JAVA="$AGENT_HOME/jre/bin/java"
 
 # Additional -D and JVM args here, heap size for example
 AGENT_OPTIONS=""
-AGENT_OPTIONS="$AGENT_OPTIONS -Xmx1024m"
+AGENT_OPTIONS="$AGENT_OPTIONS -Xmx100m"
 AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.maxMetrics=500"
-AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.sim.enabled=true"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.sim.enabled=true"
 # AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.hostName=FOOBAR"
-# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.port=FOOBAR"
-# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.ssl.enabled=FOOBAR"
-# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.accountName=FOOBAR"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.port=8090"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.ssl.enabled=false"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.accountName=customer1"
 # AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.accountAccessKey=FOOBAR"
-# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.uniqueHostId=FOOBAR"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.uniqueHostId=$HOSTNAME"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.applicationName=$HOSTNAME" # Optional
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.tierName=$HOSTNAME" # Optional
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.nodeName=$HOSTNAME" # Optional
 
 DEBUG_LOGS=false
+
+
 
 ################################################################################
 # Do not edit below this line
@@ -42,8 +47,6 @@ start() {
 
     log-debug "Starting the $APPD_NAME with $JAVA $($JAVA -version)"
 
-	log-debug "nohup sudo -H -u $APPD_RUNTIME_USER $JAVA $AGENT_OPTIONS -jar $AGENT_HOME/$APPD_PROCESS > /dev/null 2>&1 &"
-
 	nohup sudo -H -u "$APPD_RUNTIME_USER" "$JAVA" $AGENT_OPTIONS -jar "$AGENT_HOME/$APPD_PROCESS" > /dev/null 2>&1 &
 }
 
@@ -58,8 +61,6 @@ stop() {
     fi
 
     log-debug "Stopping the $APPD_NAME"
-
-	log-debug "nohup sudo -H -u $APPD_RUNTIME_USER kill -9 $processPIDs 2>&1 &"
 
     # Grab all processes. Grep for db-agent. Remove the grep process. Get the PID. Then do a kill on all that.
     nohup sudo -H -u "$APPD_RUNTIME_USER" kill -9 $processPIDs > /dev/null 2>&1 &
