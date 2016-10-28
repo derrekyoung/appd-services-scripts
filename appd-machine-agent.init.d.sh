@@ -4,7 +4,7 @@
 set -e
 
 APPD_RUNTIME_USER="appdynamics"
-AGENT_HOME="/opt/AppDynamics/agents/machineagent"
+AGENT_HOME="/opt/AppDynamics/machineagent"
 JAVA="$AGENT_HOME/jre/bin/java"
 
 # Additional -D and JVM args here, heap size for example

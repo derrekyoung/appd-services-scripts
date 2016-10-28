@@ -4,7 +4,7 @@
 set -e
 
 APPD_RUNTIME_USER="ubuntu"
-AGENT_HOME="/opt/AppDynamics/agents/dbagent"
+AGENT_HOME="/opt/AppDynamics/dbagent"
 JAVA="/usr/local/java/jdk1.8.0_91/bin/java"
 
 # Additional -D and JVM args here, heap size for example
