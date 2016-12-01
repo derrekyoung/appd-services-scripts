@@ -4,19 +4,24 @@
 set -e
 
 APPD_RUNTIME_USER="ubuntu"
-AGENT_HOME="/opt/AppDynamics/dbagent"
-JAVA="/usr/local/java/jdk1.8.0_91/bin/java"
+AGENT_HOME="/opt/AppDynamics/agents/dbagent"
+JAVA_HOME="/usr/local/java/jdk1.8.0_91"
+JAVA="$JAVA_HOME/bin/java"
 
 # Additional -D and JVM args here, heap size for example
 AGENT_OPTIONS=""
 AGENT_OPTIONS="$AGENT_OPTIONS -Xmx1024m"
-# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.maxMetrics=1000"
-# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.hostName=FOOBAR"
-# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.port=FOOBAR"
-# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.ssl.enabled=FOOBAR"
-# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.accountName=FOOBAR"
+AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.uniqueHostId=$HOSTNAME"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.hostName=localhost"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.port=8090"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.controller.ssl.enabled=false"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.accountName=customer1"
 # AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.accountAccessKey=FOOBAR"
-# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.agent.uniqueHostId=FOOBAR"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Ddbagent.name=FOOBAR"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.http.proxyHost=FOOBAR"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.http.proxyPort=FOOBAR"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.http.proxyUser=FOOBAR"
+# AGENT_OPTIONS="$AGENT_OPTIONS -Dappdynamics.http.proxyPasswordFile=FOOBAR"
 
 DEBUG_LOGS=false
 
@@ -24,54 +29,61 @@ DEBUG_LOGS=false
 # Do not edit below this line
 ################################################################################
 
-APPD_PROCESS="db-agent.jar"
-APPD_NAME="Database Agent"
+init() {
+	APPD_PROCESS="db-agent.jar"
+	APPD_NAME="Database Agent"
 
-start() {
-	if [[ -z "$JAVA" ]] || [[ ! -f "$JAVA" ]]; then
-		echo "ERROR: could not find $JAVA"
+	START_COMMAND="nohup sudo -H -u $APPD_RUNTIME_USER $JAVA $AGENT_OPTIONS -jar $AGENT_HOME/$APPD_PROCESS > /dev/null 2>&1 &"
+	STOP_COMMAND="nohup sudo -H -u $APPD_RUNTIME_USER kill $(get-pid) > /dev/null 2>&1 &"
+
+	MSG_RUNNING="AppDynamics - $APPD_NAME: Running"
+	MSG_STOPPED="AppDynamics - $APPD_NAME: STOPPED"
+
+	if [[ -z "$JAVA_HOME" ]] || [[ ! -f "$JAVA" ]]; then
+		echo -e "ERROR: could not find $JAVA"
 		exit 1
 	elif [[ ! -f "$AGENT_HOME/$APPD_PROCESS" ]]; then
-		echo "ERROR: could not find $AGENT_HOME/$APPD_PROCESS"
+		echo -e "ERROR: could not find $AGENT_HOME/$APPD_PROCESS"
 		exit 1
 	fi
+}
 
-    log-debug "Starting the $APPD_NAME with $JAVA $($JAVA -version)"
+start() {
+	local processPIDs=$(get-pid)
+	log-debug "processPIDs=$processPIDs"
+	if [[ ! -z "$processPIDs" ]]; then
+   		echo -e "$MSG_RUNNING"
+		return
+   	fi
 
-	log-debug "nohup sudo -H -u $APPD_RUNTIME_USER $JAVA $AGENT_OPTIONS -jar $AGENT_HOME/$APPD_PROCESS > /dev/null 2>&1 &"
+    echo -e "Starting the $APPD_NAME..."
+	log-debug "$START_COMMAND"
+	eval "$START_COMMAND"
 
-	nohup sudo -H -u "$APPD_RUNTIME_USER" "$JAVA" $AGENT_OPTIONS -jar "$AGENT_HOME/$APPD_PROCESS" > /dev/null 2>&1 &
-	# sudo -H -u "$APPD_RUNTIME_USER" "$JAVA" $AGENT_OPTIONS -jar "$AGENT_HOME/$APPD_PROCESS"
+	echo -e "Started the $APPD_NAME..."
 }
 
 stop() {
-	local processPIDs=$(ps -ef | grep "$AGENT_HOME"/"$APPD_PROCESS" | grep -v grep | awk '{print $2}')
-
-	log-debug "processPIDs: $processPIDs"
-
-    if [[ -z "$processPIDs" ]]; then
-        echo -e "$APPD_PROCESS is STOPPED"
-        return
-    fi
-
-    log-debug "Stopping the $APPD_NAME"
-
-	log-debug "nohup sudo -H -u $APPD_RUNTIME_USER kill -9 \"$processPIDs\" 2>&1 &"
-
-    # Grab all processes. Grep for db-agent. Remove the grep process. Get the PID. Then do a kill on all that.
-    nohup sudo -H -u "$APPD_RUNTIME_USER" kill -9 $processPIDs > /dev/null 2>&1 &
+	echo -e  "Stopping the $APPD_NAME..."
+	log-debug "$STOP_COMMAND"
+	eval "$STOP_COMMAND"
+	echo -e "Stopped the $APPD_NAME..."
 }
 
 status() {
-	local processPIDs=$(ps -ef | grep "$AGENT_HOME"/"$APPD_PROCESS" | grep -v grep | awk '{print $2}')
+	local processPIDs=$(get-pid)
 
 	log-debug "processPIDs=$processPIDs"
 
 	if [[ -z "$processPIDs" ]]; then
-	   echo "AppDynamics $APPD_NAME is STOPPED"
+		echo "$MSG_STOPPED"
    	else
-		echo "AppDynamics $APPD_NAME is Running"
+		echo "$MSG_RUNNING"
    	fi
+}
+
+get-pid() {
+	echo $(ps -ef | grep "$AGENT_HOME" | grep "$APPD_PROCESS" | grep -v grep | awk '{print $2}')
 }
 
 log-debug() {
@@ -80,6 +92,8 @@ log-debug() {
     fi
 }
 
+# init() to set the global variables
+init
 case "$1" in
 	start)
 		start
@@ -89,6 +103,7 @@ case "$1" in
 		;;
 	restart)
 		stop
+		sleep 1
 		start
 		;;
 	status)
