@@ -1,107 +1,137 @@
 #!/bin/bash
+#chkconfig: 2345 60 90
+#description: service script for AppDynamics standalone events service
+set -e
 
-source ./appd-environment-variables.sh
-if [ ! -f "./appd-environment-variables.sh" ]; then
-	echo "ERROR: File not found, appd-environment-variables.sh. This file must be in the same directory as this script."
-	exit 1
-fi
+APPD_RUNTIME_USER="ubuntu"
+ES_HOME="/home/ubuntu/AppDynamics/events-service"
+export JAVA_HOME="/usr/local/java/jdk1.8.0_91"
 
-################################################
+DEBUG_LOGS=false
+
+################################################################################
 # Do not edit below this line
+################################################################################
 
-# Zookeeper
-start-zookeeper() {
-	cd $APPD_EVENTS_SERVICE_HOME
-	echo "Starting Zookeeper..."
-	export set JAVA_OPTS="-Xmx1G -Xms1G"
-	bin/events-service.sh start -y conf/events-service-zookeeper.yml -p conf/events-service-zookeeper.properties
-	echo " "
-}
-stop-zookeeper() {
-	cd $APPD_EVENTS_SERVICE_HOME
-	echo "Stopping Zookeeper..."
-	bin/events-service.sh stop events-service-zookeeper.id
-	echo " "
-}
-status-zookeeper() {
-	cd $APPD_EVENTS_SERVICE_HOME
-	echo "Health of Zookeeper..."
-	java -jar bin/tool/tool-healthcheck.jar -hp localhost:9051
-	echo " "
-}
+init() {
+	APPD_PROCESS="tool-executor.jar"
+	APPD_NAME="Events Service"
 
-# API-Store
-start-api-store() {
-	cd $APPD_EVENTS_SERVICE_HOME
-	echo "Starting API-Store..."
-	export set JAVA_OPTS="-Xmx1G -Xms1G"
-	bin/events-service.sh start -y conf/events-service-api-store.yml -p conf/events-service-api-store.properties
-	echo " "
-}
-stop-api-store() {
-	cd $APPD_EVENTS_SERVICE_HOME
-	echo "Stopping API-Store..."
-	bin/events-service.sh stop events-service-api-store.id
-	echo " "
-}
-status-api-store() {
-	cd $APPD_EVENTS_SERVICE_HOME
-	echo "Health of API-Store..."
-	java -jar bin/tool/tool-healthcheck.jar -hp localhost:9081
-	echo " "
+	START_COMMAND="$ES_HOME/bin/events-service.sh start $ES_HOME/conf/events-service-api-store.properties"
+	STOP_COMMAND="nohup sudo -H -u $APPD_RUNTIME_USER kill $(get-pid) > /dev/null 2>&1 &"
+
+	MSG_RUNNING="AppDynamics - $APPD_NAME: Running"
+	MSG_STOPPED="AppDynamics - $APPD_NAME: STOPPED"
+
+	ES_URL="http://localhost:9080/_ping"
+	ES_RUNNING="AppDynamics - $APPD_NAME ping/: Success"
+	ES_STOPPED="AppDynamics - $APPD_NAME ping/: Failure"
+	ES_VALIDATION="_pong"
+
+	if [[ -z "$JAVA_HOME" ]] || [[ ! -d "$JAVA_HOME" ]]; then
+		echo -e "ERROR: could not find $JAVA_HOME"
+		exit 1
+	fi
+
+	if [[ ! -d "$ES_HOME" ]]; then
+		echo -e "ERROR: could not find $ES_HOME"
+		exit 1
+	fi
 }
 
+start() {
+	local processPIDs=$(get-pid)
+	log-debug "processPIDs=$processPIDs"
+	if [[ ! -z "$processPIDs" ]]; then
+   		echo -e "$MSG_RUNNING"
+		return
+   	fi
+
+    echo -e "Starting the $APPD_NAME..."
+	# DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	# cd $ES_HOME
+
+	log-debug "$START_COMMAND"
+	eval "$START_COMMAND"
+
+	# cd $DIR
+
+	echo -e "Started the $APPD_NAME..."
+}
+
+stop() {
+	local processPIDs=$(get-pid)
+	log-debug "processPIDs: $processPIDs"
+
+    if [[ -z "$processPIDs" ]]; then
+        echo -e "$MSG_STOPPED"
+        return
+    fi
+
+	echo -e  "Stopping the $APPD_NAME..."
+	log-debug "$STOP_COMMAND"
+	eval "$STOP_COMMAND"
+	echo -e "Stopped the $APPD_NAME..."
+}
+
+status() {
+	local processPIDs=$(get-pid)
+
+	log-debug "processPIDs=$processPIDs"
+
+	if [[ -z "$processPIDs" ]]; then
+		echo "$MSG_STOPPED"
+   	else
+		echo "$MSG_RUNNING"
+   	fi
+
+	check-ping
+}
+
+check-ping() {
+	local url="$ES_URL"
+    local expectedContent="HTTP/1.1 200 OK"
+
+	local actualContent=$(curl -s --head "$url" | head -n 1 | grep "$expectedContent")
+
+	log-debug "actualContent: $actualContent"
+
+	if [[ $actualContent != *"$expectedContent"* ]]; then
+		echo "$ES_STOPPED"
+	else
+		echo "$ES_RUNNING"
+    fi
+}
+
+get-pid() {
+	echo $(ps -ef | grep "$ES_HOME" | grep "$APPD_PROCESS" | grep -v grep | awk '{print $2}')
+}
+
+log-debug() {
+    if [[ $DEBUG_LOGS = true ]]; then
+        echo -e "DEBUG: $1"
+    fi
+}
+
+# init() to set the global variables
+init
 case "$1" in
 	start)
-		start-zookeeper
-		start-api-store
+		start
 		;;
 	stop)
-		stop-zookeeper
-		stop-api-store
+		stop
 		;;
 	restart)
-		stop-zookeeper
-		stop-api-store
+		stop
+		sleep 1
+		start
 		;;
 	status)
-		status-zookeeper
-		status-api-store
-		start-zookeeper
-		start-api-store
-		;;
-	start-zookeeper)
-		start-zookeeper
-		;;
-	stop-zookeeper)
-		stop-zookeeper
-		;;
-	restart-zookeeper)
-		stop-zookeeper
-		start-zookeeper
-		;;
-	status-zookeeper)
-		status-zookeeper
-		;;
-	start-api-store)
-		start-api-store
-		exit
-		;;
-	stop-api-store)
-		stop-api-store
-		;;
-	restart-api-store)
-		stop-api-store
-		start-api-store
-		;;
-	status-api-store)
-		status-api-store
+		status
 		;;
 	*)
-		echo "Usage: $0 {start|stop|restart|status}"
-		echo " "
-		echo "Optionally, control individual components:"
-		echo "  Zookeeper: $0 {start-zookeeper|stop-zookeeper|restart-zookeeper|status-zookeeper}"
-		echo "  API-Store: $0 {start-api-store|stop-api-store|restart-api-store|status-api-store}"
-		exit
+		echo -e "Usage:\n $0 [start|stop|restart|status]"
+		exit 1
+		;;
 esac
