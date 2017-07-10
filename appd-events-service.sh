@@ -17,7 +17,7 @@ init() {
 	APPD_PROCESS="tool-executor.jar"
 	APPD_NAME="Events Service"
 
-	START_COMMAND="$ES_HOME/bin/events-service.sh start $ES_HOME/conf/events-service-api-store.properties"
+	START_COMMAND="$ES_HOME/bin/events-service.sh start -p $ES_HOME/conf/events-service-api-store.properties"
 	STOP_COMMAND="nohup sudo -H -u $APPD_RUNTIME_USER kill $(get-pid) > /dev/null 2>&1 &"
 
 	MSG_RUNNING="AppDynamics - $APPD_NAME: Running"
